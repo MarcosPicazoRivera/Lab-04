@@ -1,0 +1,47 @@
+name: Lab 4 - Pipeline Seguro
+
+on:
+  push:
+    branches: [ "main" ] 
+
+permissions:
+  contents: read
+
+jobs:
+  build_y_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4.1.1 
+
+      - name: Validar tests
+        run: |
+          echo "Construyendo aplicación..."
+          echo "Ejecutando tests de seguridad..."
+          echo "Tests pasados correctamente. ✅"
+
+  despliegue_staging:
+    needs: build_y_test 
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Desplegar en Staging
+        run: |
+          echo "Desplegando con variable pública: ${{ vars.NON_SENSITIVE_VAR }}"
+          echo "Usando secreto (se verá con asteriscos): ${{ secrets.API_SECRET }}"
+
+  despliegue_produccion:
+    needs: despliegue_staging # Depende de que staging haya sido un éxito
+    runs-on: ubuntu-latest
+    environment: production # Este entorno tiene protección manual
+    
+    # Parte 2: A nivel job, pedimos permisos extra solo si es necesario
+    permissions:
+      contents: read
+      
+    steps:
+      - name: Desplegar en Producción
+        run: |
+          echo "Desplegando en Producción de forma segura."
+          echo "Utilizando secreto de despliegue." 
+          # NUNCA hacer 'echo ${{ secrets.DEPLOY_SECRET }}' en un entorno real
